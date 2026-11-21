@@ -279,6 +279,10 @@ export async function getEmbeddedServerPort() {
   return commands.getEmbeddedServerPort()
 }
 
+export async function listWindowsApps() {
+  return commands.listWindowsApps()
+}
+
 export async function changeClashCore(clashCore: string) {
   return commands.changeClashCore(clashCore)
 }

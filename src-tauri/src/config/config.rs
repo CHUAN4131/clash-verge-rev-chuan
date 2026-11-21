@@ -255,14 +255,23 @@ impl Config {
             config.insert(MIXED_PORT_KEY.into(), port.into());
         }
 
-        Self::runtime().await.edit_draft(|d| {
-            *d = IRuntime {
-                config: Some(config),
-                dns_override: Some(dns_override),
-                exists_keys,
-                chain_logs: logs,
+        let runtime = IRuntime {
+            config: Some(config),
+            #[cfg(windows)]
+            app_direct_rules: Default::default(),
+            dns_override: Some(dns_override),
+            exists_keys,
+            chain_logs: logs,
+        };
+        #[cfg(windows)]
+        let runtime = {
+            let mut runtime = runtime;
+            if let Some(paths) = &Self::verge().await.latest_arc().rule_direct_apps {
+                runtime.set_rule_direct_apps(paths);
             }
-        });
+            runtime
+        };
+        Self::runtime().await.edit_draft(|draft| *draft = runtime);
 
         Ok(())
     }

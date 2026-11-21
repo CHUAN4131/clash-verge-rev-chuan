@@ -11,6 +11,48 @@ use crate::{
 use tauri::{AppHandle, Manager as _, ipc::Channel};
 use tristr::alias::String;
 
+#[derive(serde::Deserialize, serde::Serialize, specta::Type)]
+pub struct WindowsApp {
+    pub name: std::string::String,
+    pub path: std::string::String,
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn list_windows_apps() -> CmdResult<Vec<WindowsApp>> {
+    #[cfg(windows)]
+    {
+        use base64::{Engine as _, engine::general_purpose::STANDARD};
+        use std::{path::PathBuf, time::Duration};
+        use windows_sys::Win32::System::Threading::CREATE_NO_WINDOW;
+
+        let system_root = std::env::var_os("SystemRoot").ok_or("Windows system directory is unavailable")?;
+        let powershell = PathBuf::from(system_root).join(r"System32\WindowsPowerShell\v1.0\powershell.exe");
+        let script = include_str!("windows_apps.ps1");
+        let encoded = STANDARD.encode(script.encode_utf16().flat_map(u16::to_le_bytes).collect::<Vec<_>>());
+        let output = tokio::time::timeout(
+            Duration::from_secs(20),
+            tokio::process::Command::new(powershell)
+                .creation_flags(CREATE_NO_WINDOW)
+                .kill_on_drop(true)
+                .args(["-NoProfile", "-NonInteractive", "-EncodedCommand", &encoded])
+                .output(),
+        )
+        .await
+        .map_err(|_| "Timed out reading Windows applications")?
+        .stringify_err()?;
+
+        if !output.status.success() {
+            return Err(super::CommandFailure::plain(
+                std::string::String::from_utf8_lossy(&output.stderr).trim(),
+            ));
+        }
+        serde_json::from_slice(&output.stdout).stringify_err()
+    }
+    #[cfg(not(windows))]
+    Ok(Vec::new())
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn open_app_dir() -> CmdResult<()> {

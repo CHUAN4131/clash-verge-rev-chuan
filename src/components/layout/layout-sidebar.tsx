@@ -9,7 +9,9 @@ import LogoSvg from '@/assets/image/logo.svg?react'
 import { useVerge } from '@/hooks/use-verge'
 import { useNavMenuOrder } from '@/pages/_layout/hooks'
 import { navItems } from '@/pages/_navigation'
+import getSystem from '@/utils/get-system'
 
+import routeIcon from '../../../src-tauri/icons/verge-route/app.png'
 import { SortableItem } from '../base'
 
 import { LayoutItem } from './layout-item'
@@ -24,6 +26,7 @@ interface LayoutSidebarProps {
 }
 
 const SENSORS = [PointerSensor, KeyboardSensor]
+const IS_WINDOWS = getSystem() === 'windows'
 
 export const LayoutSidebar = (props: LayoutSidebarProps) => {
   const { isDark, isCollapsed } = props
@@ -130,18 +133,46 @@ export const LayoutSidebar = (props: LayoutSidebarProps) => {
             justifyContent: 'space-between',
           }}
         >
-          <SvgIcon
-            component={isDark ? iconDark : iconLight}
-            style={{
-              height: '36px',
-              width: '36px',
-              marginTop: '-3px',
-              marginRight: '5px',
-              marginLeft: '-3px',
-            }}
-            inheritViewBox
-          />
-          <LogoSvg fill={isDark ? 'white' : 'black'} />
+          {IS_WINDOWS ? (
+            <>
+              <img
+                alt={isCollapsed ? 'Verge Route' : ''}
+                src={routeIcon}
+                style={{
+                  width: 32,
+                  height: 32,
+                  marginRight: isCollapsed ? 0 : 5,
+                }}
+              />
+              {!isCollapsed && (
+                <Box
+                  component="span"
+                  sx={{
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                    alignSelf: 'center',
+                  }}
+                >
+                  Verge Route
+                </Box>
+              )}
+            </>
+          ) : (
+            <>
+              <SvgIcon
+                component={isDark ? iconDark : iconLight}
+                style={{
+                  height: '36px',
+                  width: '36px',
+                  marginTop: '-3px',
+                  marginRight: '5px',
+                  marginLeft: '-3px',
+                }}
+                inheritViewBox
+              />
+              <LogoSvg fill={isDark ? 'white' : 'black'} />
+            </>
+          )}
         </div>
         <UpdateButton className="the-newbtn" />
       </div>

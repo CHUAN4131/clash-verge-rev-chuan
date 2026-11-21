@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "アプリの直接接続",
+      "add": "EXE ファイルを追加",
+      "description": "選択したアプリはルールモードで直接接続します。変更は新しい接続に適用されます。",
+      "search": "アプリを検索",
+      "selected": "{{count}} 件を選択中",
+      "empty": "アプリが見つかりませんでした。",
+      "noResults": "検索に一致するアプリはありません。",
+      "loadFailed": "アプリ一覧を読み込めませんでした。再読み込みするか、EXE ファイルを追加してください。"
+    },
     "modes": {
       "rule": "Rule",
       "global": "Global",

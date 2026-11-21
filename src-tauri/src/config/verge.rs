@@ -73,6 +73,10 @@ pub struct IVerge {
 
     pub enable_system_proxy: Option<bool>,
 
+    #[cfg(windows)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rule_direct_apps: Option<Vec<String>>,
+
     pub enable_proxy_guard: Option<bool>,
 
     pub enable_bypass_check: Option<bool>,
@@ -371,7 +375,7 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             auto_switch_selector_group: Some(true),
-            auto_check_update: Some(true),
+            auto_check_update: Some(!cfg!(windows)),
             enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             enable_auto_backup_schedule: Some(false),
@@ -444,6 +448,8 @@ impl IVerge {
         patch_opt_field!(self, patch, verge_port);
         patch_opt_field!(self, patch, verge_http_enabled);
         patch_opt_field!(self, patch, enable_system_proxy);
+        #[cfg(windows)]
+        patch_opt_field!(self, patch, rule_direct_apps);
         patch_opt_field!(self, patch, enable_proxy_guard);
         patch_opt_field!(self, patch, enable_bypass_check);
         patch_opt_field!(self, patch, use_default_bypass);

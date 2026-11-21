@@ -6,6 +6,8 @@ use std::collections::BTreeSet;
 pub(super) enum Effect {
     RestartCore,
     ClashConfig,
+    #[cfg(windows)]
+    RuleDirectApps,
     Autostart,
     Language,
     SystemProxy,
@@ -40,6 +42,10 @@ macro_rules! verge_registry {
             let IVerge { $( $(#[$cfg])* $field, )* } = patch;
             let mut effects = Effects::new();
             $( $(#[$cfg])* { select_field!(effects, $field, $rule); } )*
+            #[cfg(windows)]
+            if effects.contains(&Effect::RestartCore) || effects.contains(&Effect::ClashConfig) {
+                effects.remove(&Effect::RuleDirectApps);
+            }
             effects
         }
     };
@@ -73,6 +79,8 @@ verge_registry! {
     enable_auto_launch => [Autostart];
     enable_silent_start => NoEffect;
     enable_system_proxy => [SystemProxy, TrayMenu, TrayTooltip, TrayIcon];
+    #[cfg(windows)]
+    rule_direct_apps => [RuleDirectApps];
     enable_proxy_guard => [SystemProxy];
     enable_bypass_check => NoEffect;
     enable_dns_settings => NoEffect;

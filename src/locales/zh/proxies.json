@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "应用直连",
+      "add": "手动添加 EXE",
+      "description": "所选应用在规则模式下直接联网。保存后对新连接生效。",
+      "search": "搜索软件",
+      "selected": "已勾选 {{count}} 项",
+      "empty": "没有找到可列出的软件。",
+      "noResults": "没有找到匹配的软件。",
+      "loadFailed": "无法读取软件列表。可以刷新重试，或手动添加 EXE。"
+    },
     "modes": {
       "rule": "规则",
       "global": "全局",

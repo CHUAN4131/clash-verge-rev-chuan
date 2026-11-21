@@ -539,6 +539,16 @@ export interface TranslationResources {
           minimumNodesHint: string
           warning: string
         }
+        directApps: {
+          add: string
+          description: string
+          empty: string
+          loadFailed: string
+          noResults: string
+          search: string
+          selected: string
+          title: string
+        }
         empty: {
           actions: {
             openLogs: string

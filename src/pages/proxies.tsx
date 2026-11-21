@@ -11,6 +11,7 @@ import {
   type ProxyChainItem,
 } from '@/components/proxy/proxy-chain-model'
 import { ProxyGroups } from '@/components/proxy/proxy-groups'
+import { RuleDirectAppsButton } from '@/components/proxy/rule-direct-apps'
 import {
   useAppRefreshers,
   useClashConfigData,
@@ -23,7 +24,9 @@ import {
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
+import getSystem from '@/utils/get-system'
 
+const IS_WINDOWS = getSystem() === 'windows'
 const MODES = ['rule', 'global', 'direct'] as const
 type Mode = (typeof MODES)[number]
 const MODE_SET = new Set<string>(MODES)
@@ -181,6 +184,8 @@ const ProxyPage = () => {
               </Button>
             ))}
           </ButtonGroup>
+
+          {IS_WINDOWS && curMode === 'rule' && <RuleDirectAppsButton />}
 
           <Button
             size="small"

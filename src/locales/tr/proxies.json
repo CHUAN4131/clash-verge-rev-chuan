@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "Doğrudan Uygulamalar",
+      "add": "EXE dosyası ekle",
+      "description": "Seçilen uygulamalar kural modunda doğrudan bağlanır. Değişiklikler yeni bağlantılara uygulanır.",
+      "search": "Uygulama ara",
+      "selected": "{{count}} seçildi",
+      "empty": "Uygulama bulunamadı.",
+      "noResults": "Aramayla eşleşen uygulama yok.",
+      "loadFailed": "Uygulama listesi yüklenemedi. Listeyi yenileyin veya bir EXE dosyası ekleyin."
+    },
     "modes": {
       "rule": "Kural",
       "global": "Küresel",

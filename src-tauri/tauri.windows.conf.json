@@ -1,8 +1,26 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "productName": "Verge Route",
+  "mainBinaryName": "verge-route",
+  "identifier": "io.github.chuan4131.verge-route",
+  "build": {
+    "features": ["verge-route"]
+  },
   "bundle": {
     "targets": ["nsis"],
+    "icon": ["icons/verge-route/app.ico"],
+    "resources": [
+      "resources/ASN.mmdb",
+      "resources/Country.mmdb",
+      "resources/enableLoopback.exe",
+      "resources/geoip.dat",
+      "resources/geosite.dat",
+      "resources/verge-route-service"
+    ],
+    "shortDescription": "Verge Route",
+    "longDescription": "Verge Route",
+    "publisher": "CHUAN4131",
+    "createUpdaterArtifacts": false,
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
@@ -13,11 +31,19 @@
       },
       "nsis": {
         "displayLanguageSelector": true,
-        "installerIcon": "icons/icon.ico",
+        "installerIcon": "icons/verge-route/app.ico",
         "languages": ["SimpChinese", "English", "Russian"],
-        "installMode": "perMachine",
-        "installerHooks": "./packages/windows/core-hashes.nsh",
-        "template": "./packages/windows/installer.nsi"
+        "installMode": "currentUser"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": []
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["verge-route"]
       }
     }
   },

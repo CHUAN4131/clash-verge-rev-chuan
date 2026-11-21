@@ -56,6 +56,8 @@ fn after_change_clash_mode() {
 
 /// Propagates mihomo PATCH failures so the frontend can roll back its optimistic mode.
 pub async fn change_clash_mode(mode: String) -> Result<(), String> {
+    #[cfg(windows)]
+    let config_write = Config::lock_config_write().await;
     let mut mapping = Mapping::new();
     mapping.insert(Value::from("mode"), Value::from(mode.as_str()));
     let json_value = serde_json::json!({
@@ -74,11 +76,14 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
 
     let clash = Config::clash().await;
     let save_result = {
+        #[cfg(not(windows))]
         let _config_write = Config::lock_config_write().await;
         clash.edit_draft(|d| d.patch_config(&mapping));
         clash.apply();
         clash.data_arc().save_config().await
     };
+    #[cfg(windows)]
+    drop(config_write);
     if save_result.is_ok() {
         announce(Refresh::Clash);
         tray::Tray::global().update_menu_and_icon().await;

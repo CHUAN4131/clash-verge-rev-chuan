@@ -16,6 +16,7 @@ export const commands = {
   getAutoProxy: () => __TAURI_INVOKE<AutoProxy>('get_auto_proxy'),
   getEmbeddedServerPort: () =>
     __TAURI_INVOKE<number>('get_embedded_server_port'),
+  listWindowsApps: () => __TAURI_INVOKE<WindowsApp[]>('list_windows_apps'),
   openAppDir: () => __TAURI_INVOKE<null>('open_app_dir'),
   openLogsDir: () => __TAURI_INVOKE<null>('open_logs_dir'),
   openCoreDir: () => __TAURI_INVOKE<null>('open_core_dir'),
@@ -457,6 +458,7 @@ export type IVerge_Deserialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  rule_direct_apps?: string[] | null
 }
 
 /**  ### `verge.yaml` schema */
@@ -548,6 +550,7 @@ export type IVerge_Serialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  rule_direct_apps?: string[]
 }
 
 export type IconInfo = {
@@ -675,6 +678,7 @@ export type PlatformVergeFields_Deserialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  rule_direct_apps?: string[] | null
 }
 
 export type PlatformVergeFields_Serialize = {
@@ -684,6 +688,7 @@ export type PlatformVergeFields_Serialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  rule_direct_apps?: string[]
 }
 
 export type PrfExtra = {
@@ -1152,6 +1157,11 @@ export type VergeEventPayloads_Serialize = {
 export type WebDavFile = {
   href: string
   last_modified: string
+}
+
+export type WindowsApp = {
+  name: string
+  path: string
 }
 
 export type YamlMapping = { [key in string]: JsonValue }

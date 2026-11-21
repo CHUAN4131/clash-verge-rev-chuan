@@ -12,6 +12,7 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::get_embedded_server_port,
+            cmd::list_windows_apps,
             cmd::open_app_dir,
             cmd::open_logs_dir,
             cmd::open_core_dir,
@@ -219,6 +220,9 @@ struct PlatformVergeFields {
     verge_tproxy_enabled: Option<bool>,
     #[specta(optional)]
     enable_tray_speed: Option<bool>,
+    #[specta(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rule_direct_apps: Option<Vec<String>>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, specta::Type)]

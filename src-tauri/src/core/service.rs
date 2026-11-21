@@ -320,7 +320,7 @@ pub(crate) fn service_stop_reason() -> Result<Option<&'static str>> {
         return Ok(None);
     }
     // The development channel registers an on-demand start.
-    if !cfg!(feature = "verge-dev")
+    if !cfg!(any(feature = "verge-dev", feature = "verge-route"))
         && service
             .query_config()
             .context("failed to query Windows service configuration")?

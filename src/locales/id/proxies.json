@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "Aplikasi Langsung",
+      "add": "Tambah file EXE",
+      "description": "Aplikasi yang dipilih terhubung langsung dalam mode aturan. Perubahan berlaku untuk koneksi baru.",
+      "search": "Cari aplikasi",
+      "selected": "{{count}} dipilih",
+      "empty": "Tidak ada aplikasi yang ditemukan.",
+      "noResults": "Tidak ada aplikasi yang cocok.",
+      "loadFailed": "Daftar aplikasi tidak dapat dimuat. Segarkan daftar atau tambahkan file EXE."
+    },
     "modes": {
       "rule": "Rule",
       "global": "Global",

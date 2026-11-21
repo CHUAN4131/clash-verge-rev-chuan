@@ -22,6 +22,7 @@ const HASH_CACHE_FILE = path.join(TEMP_DIR, '.hash_cache.json')
 
 const PLATFORM_MAP = {
   'x86_64-pc-windows-msvc': 'win32',
+  'x86_64-pc-windows-gnu': 'win32',
   'i686-pc-windows-msvc': 'win32',
   'aarch64-pc-windows-msvc': 'win32',
   'x86_64-apple-darwin': 'darwin',
@@ -35,6 +36,7 @@ const PLATFORM_MAP = {
 }
 const ARCH_MAP = {
   'x86_64-pc-windows-msvc': 'x64',
+  'x86_64-pc-windows-gnu': 'x64',
   'i686-pc-windows-msvc': 'ia32',
   'aarch64-pc-windows-msvc': 'arm64',
   'x86_64-apple-darwin': 'x64',
@@ -572,7 +574,68 @@ async function findExtractedFile(dir, fileName) {
   return null
 }
 
+async function resolveWindowsRouteService() {
+  const lock = await fsp.readFile(path.join(cwd, 'Cargo.lock'), 'utf8')
+  const serviceSource = lock
+    .split('\n[[package]]')
+    .find((entry) => /^name = "clash_verge_service_ipc"\r?$/m.test(entry))
+    ?.match(/^source = "git\+([^"]+)"\r?$/m)?.[1]
+  if (!serviceSource) {
+    throw new Error('Cargo.lock must pin the Verge Route service source')
+  }
+
+  const source = new URL(serviceSource)
+  const revision = source.hash.slice(1)
+  source.hash = ''
+  source.search = ''
+  const installRoot = path.join(
+    TEMP_DIR,
+    'verge-route-service',
+    SIDECAR_HOST,
+    revision,
+  )
+  const cache = path.join(installRoot, 'bin')
+  const destination = path.join(RESOURCES_DIR, 'verge-route-service')
+  const binaries = SERVICE_BINARIES.map(
+    (name) => serviceFileInfo(name).sourceFile,
+  )
+
+  if (
+    FORCE ||
+    binaries.some((name) => !fs.existsSync(path.join(cache, name)))
+  ) {
+    execFileSync(
+      'cargo',
+      [
+        'install',
+        '--git',
+        source.href,
+        '--rev',
+        revision,
+        '--locked',
+        '--force',
+        '--root',
+        installRoot,
+        '--target',
+        SIDECAR_HOST,
+        '--features',
+        'standalone,client,development-channel',
+        ...binaries.flatMap((name) => ['--bin', path.basename(name, '.exe')]),
+        'clash_verge_service_ipc',
+      ],
+      { stdio: 'inherit' },
+    )
+  }
+
+  await fsp.mkdir(destination, { recursive: true })
+  for (const name of binaries) {
+    await fsp.copyFile(path.join(cache, name), path.join(destination, name))
+  }
+}
+
 async function resolveServiceBundle() {
+  if (platform === 'win32') return resolveWindowsRouteService()
+
   const files = SERVICE_BINARIES.map((name) => {
     const info = serviceFileInfo(name)
     return {
@@ -743,7 +806,11 @@ const tasks = [
   // After both sidecar tasks: it hashes what they downloaded.
   { name: 'core_hashes', func: resolveCoreHashes, retry: 1, winOnly: true },
   { name: 'plugin', func: resolvePlugin, retry: 5, winOnly: true },
-  { name: 'service', func: resolveServiceBundle, retry: 5 },
+  {
+    name: 'service',
+    func: resolveServiceBundle,
+    retry: platform === 'win32' ? 1 : 5,
+  },
   { name: 'mmdb', func: resolveMmdb, retry: 5 },
   { name: 'asn_mmdb', func: resolveASNMmdb, retry: 5 },
   { name: 'geosite', func: resolveGeosite, retry: 5 },
@@ -758,7 +825,7 @@ const tasks = [
     name: 'service_chmod',
     func: resolveServicePermission,
     retry: 5,
-    unixOnly: platform === 'linux' || platform === 'darwin',
+    unixOnly: true,
   },
   {
     name: 'set_dns_script',

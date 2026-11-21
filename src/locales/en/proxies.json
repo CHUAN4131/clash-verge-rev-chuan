@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "Direct Apps",
+      "add": "Add EXE file",
+      "description": "Selected apps connect directly in Rule mode. Changes apply to new connections.",
+      "search": "Search apps",
+      "selected": "{{count}} selected",
+      "empty": "No apps found.",
+      "noResults": "No matching apps.",
+      "loadFailed": "Could not load the app list. Refresh the list or add an EXE file."
+    },
     "modes": {
       "rule": "Rule",
       "global": "Global",

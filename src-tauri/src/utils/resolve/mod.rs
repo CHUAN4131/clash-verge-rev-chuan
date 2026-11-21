@@ -38,6 +38,7 @@ pub(crate) fn init_work_dir_and_logger() -> anyhow::Result<()> {
 
 pub(crate) fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
+        #[cfg(not(windows))]
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(server::embed_server);
         #[cfg(target_os = "linux")]
@@ -95,6 +96,7 @@ async fn resolve_setup() {
     resolve_done();
 }
 
+#[cfg(not(windows))]
 fn init_scheme() {
     logging_error!(Type::Setup, init::init_scheme());
 }

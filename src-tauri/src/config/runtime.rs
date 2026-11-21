@@ -9,6 +9,8 @@ const PATCH_CONFIG_INNER: [&str; 5] = ["allow-lan", "ipv6", "log-level", "unifie
 #[derive(Default, Clone)]
 pub struct IRuntime {
     pub config: Option<Mapping>,
+    #[cfg(windows)]
+    pub(crate) app_direct_rules: super::app_direct::AppDirectRules,
     pub(crate) dns_override: Option<super::dns::DnsOverrideState>,
     // Keys seen in the profile pipeline, including merge and script output.
     pub exists_keys: HashSet<String>,
@@ -17,6 +19,13 @@ pub struct IRuntime {
 }
 
 impl IRuntime {
+    #[cfg(windows)]
+    pub(crate) fn set_rule_direct_apps(&mut self, paths: &[String]) {
+        if let Some(config) = &mut self.config {
+            self.app_direct_rules.apply(config, paths);
+        }
+    }
+
     #[inline]
     pub fn patch_config(&mut self, patch: &Mapping) {
         let config = if let Some(config) = self.config.as_mut() {

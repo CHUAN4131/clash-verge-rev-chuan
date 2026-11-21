@@ -141,11 +141,28 @@ impl CoreManager {
         Ok(ConfigUpdateGuard(self))
     }
 
-    pub(crate) async fn update_config_in_patch(&self, _update: &ConfigUpdateGuard<'_>) -> Result<()> {
+    pub(crate) async fn update_config_in_patch(
+        &self,
+        _update: &ConfigUpdateGuard<'_>,
+        #[cfg(windows)] rule_direct_apps: Option<&[String]>,
+    ) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             anyhow::bail!("application is exiting");
         }
         self.set_last_update(Instant::now());
+        #[cfg(windows)]
+        if let Some(paths) = rule_direct_apps {
+            let mode = Config::clash().await.latest_arc().get_mode();
+            Config::runtime().await.edit_draft(|draft| {
+                draft.set_rule_direct_apps(paths);
+                if let (Some(config), Some(mode)) = (&mut draft.config, mode) {
+                    config.insert("mode".into(), mode.into());
+                }
+            });
+        } else {
+            Config::generate().await?;
+        }
+        #[cfg(not(windows))]
         Config::generate().await?;
         let outcome = self.validate_and_apply_draft().await?;
         if outcome.is_valid() {
@@ -164,6 +181,8 @@ impl CoreManager {
         Config::runtime().await.edit_draft(|d| {
             *d = IRuntime {
                 config: Some(clash_config.to_owned()),
+                #[cfg(windows)]
+                app_direct_rules: Default::default(),
                 dns_override: None,
                 exists_keys: HashSet::new(),
                 chain_logs: Default::default(),

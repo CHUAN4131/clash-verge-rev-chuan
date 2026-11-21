@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "앱 직접 연결",
+      "add": "EXE 파일 추가",
+      "description": "선택한 앱은 규칙 모드에서 직접 연결합니다. 변경 사항은 새 연결에 적용됩니다.",
+      "search": "앱 검색",
+      "selected": "{{count}}개 선택됨",
+      "empty": "앱을 찾을 수 없습니다.",
+      "noResults": "검색 조건에 맞는 앱이 없습니다.",
+      "loadFailed": "앱 목록을 불러오지 못했습니다. 목록을 새로 고치거나 EXE 파일을 추가하세요."
+    },
     "modes": {
       "rule": "규칙",
       "global": "전역",

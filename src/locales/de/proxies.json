@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "Direkte Apps",
+      "add": "EXE-Datei hinzufügen",
+      "description": "Ausgewählte Apps verbinden sich im Regelmodus direkt. Änderungen gelten für neue Verbindungen.",
+      "search": "Apps suchen",
+      "selected": "{{count}} ausgewählt",
+      "empty": "Keine Apps gefunden.",
+      "noResults": "Keine passenden Apps gefunden.",
+      "loadFailed": "Die App-Liste konnte nicht geladen werden. Aktualisiere sie oder füge eine EXE-Datei hinzu."
+    },
     "modes": {
       "rule": "Regel",
       "global": "Global",

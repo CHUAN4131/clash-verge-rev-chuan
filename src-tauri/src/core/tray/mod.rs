@@ -117,14 +117,21 @@ impl TrayState {
         #[cfg(not(target_os = "macos"))]
         let _ = verge;
 
-        (
-            false,
-            match kind {
-                IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
-                IconKind::SysProxy => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
-                IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
-            },
-        )
+        #[cfg(windows)]
+        let icon: &[u8] = match kind {
+            IconKind::Common => include_bytes!("../../../icons/verge-route/tray.ico"),
+            IconKind::SysProxy => include_bytes!("../../../icons/verge-route/tray-system.ico"),
+            IconKind::Tun => include_bytes!("../../../icons/verge-route/tray-tun.ico"),
+        };
+
+        #[cfg(not(windows))]
+        let icon: &[u8] = match kind {
+            IconKind::Common => include_bytes!("../../../icons/tray-icon.ico"),
+            IconKind::SysProxy => include_bytes!("../../../icons/tray-icon-sys.ico"),
+            IconKind::Tun => include_bytes!("../../../icons/tray-icon-tun.ico"),
+        };
+
+        (false, Cow::Borrowed(icon))
     }
 }
 
@@ -359,7 +366,8 @@ impl Tray {
         );
 
         let tooltip = format!(
-            "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",
+            "{} {}\n{}: {}\n{}: {}\n{}: {}",
+            app_handle.package_info().name,
             reassembled_version,
             sys_proxy_text,
             switch_str(system_proxy),

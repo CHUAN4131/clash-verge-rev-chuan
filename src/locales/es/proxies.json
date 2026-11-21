@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "Apps directas",
+      "add": "Añadir archivo EXE",
+      "description": "Las aplicaciones seleccionadas se conectan directamente en el modo de reglas. Los cambios se aplican a las conexiones nuevas.",
+      "search": "Buscar aplicaciones",
+      "selected": "{{count}} en la selección",
+      "empty": "No se encontraron aplicaciones.",
+      "noResults": "No hay aplicaciones que coincidan.",
+      "loadFailed": "No se pudo cargar la lista. Actualízala o añade un archivo EXE."
+    },
     "modes": {
       "rule": "Rule",
       "global": "Global",

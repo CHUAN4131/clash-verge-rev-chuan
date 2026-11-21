@@ -1,3 +1,5 @@
+#[cfg(any(windows, test))]
+mod app_direct;
 mod clash;
 #[allow(clippy::module_inception)]
 mod config;

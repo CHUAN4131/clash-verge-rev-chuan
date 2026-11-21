@@ -418,6 +418,11 @@ impl Sysopt {
     pub(super) async fn update_sysproxy(&self) -> Result<()> {
         let mut proxy_state = self.proxy_state_lock.lock().await;
         let verge = Config::verge().await.latest_arc();
+        #[cfg(windows)]
+        if !verge.enable_system_proxy.unwrap_or_default() {
+            drop(proxy_state);
+            return self.reset_sysproxy().await;
+        }
         // Configured, not live: this runs while the Core is being started or restarted, and
         // asking a Core that is not up yet would only fall back here anyway.
         let port = MixedPort::desired().await;
@@ -431,7 +436,12 @@ impl Sysopt {
             verge.enable_proxy_guard.unwrap_or_default(),
         );
 
+        #[cfg(windows)]
+        let mut candidate = proxy_state.clone();
         let (sys, auto, guard_type) = {
+            #[cfg(windows)]
+            let (sys, auto) = &mut candidate;
+            #[cfg(not(windows))]
             let (sys, auto) = &mut *proxy_state;
             sys.host = proxy_host.into();
             sys.port = port;
@@ -524,6 +534,10 @@ impl Sysopt {
         }
 
         // Never point the guard at a target that failed to reach the OS.
+        #[cfg(windows)]
+        {
+            *proxy_state = candidate;
+        }
         self.access_guard().write().set_guard_type(guard_type);
         Ok(())
     }
@@ -548,13 +562,39 @@ impl Sysopt {
         let _guard_operation = self.guard_operation_lock.lock().await;
         let drained = self.stop_proxy_guard_locked().await;
 
-        // 直接关闭所有代理
-        let (sys, auto) = {
-            let (sys, auto) = &mut *proxy_state;
-            sys.enable = false;
-            auto.enable = false;
-            (sys.clone(), auto.clone())
-        };
+        #[cfg(windows)]
+        {
+            // WinINET is shared with the other installed client and with Windows.
+            let (sys, auto) = &*proxy_state;
+            if !sys.enable && !auto.enable {
+                return Ok(());
+            }
+            let (sys, auto) = (sys.clone(), auto.clone());
+            let owns_proxy = tokio::task::spawn_blocking(move || -> Result<bool> {
+                let current_sys = Sysproxy::get_system_proxy()?;
+                Ok(if auto.enable {
+                    let current_auto = Autoproxy::get_auto_proxy()?;
+                    !current_sys.enable && current_auto.enable && current_auto.url == auto.url
+                } else {
+                    current_sys.enable && current_sys.host == sys.host && current_sys.port == sys.port
+                })
+            })
+            .await??;
+            if !owns_proxy {
+                proxy_state.0.enable = false;
+                proxy_state.1.enable = false;
+                return Ok(());
+            }
+        }
+
+        let (mut sys, mut auto) = proxy_state.clone();
+        sys.enable = false;
+        auto.enable = false;
+        #[cfg(not(windows))]
+        {
+            proxy_state.0.enable = false;
+            proxy_state.1.enable = false;
+        }
 
         // The match is trustworthy only after the guard drained.
         if cfg!(target_os = "macos")
@@ -564,12 +604,18 @@ impl Sysopt {
             return Ok(());
         }
 
-        disable_until_the_last_write_is_ours(
+        let result = disable_until_the_last_write_is_ours(
             drained,
             || disable_all_proxies(sys.clone(), auto.clone()),
             || self.stop_proxy_guard_locked(),
         )
-        .await
+        .await;
+        #[cfg(windows)]
+        if result.is_ok() {
+            proxy_state.0.enable = false;
+            proxy_state.1.enable = false;
+        }
+        result
     }
 }
 

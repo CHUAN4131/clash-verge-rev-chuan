@@ -49,7 +49,19 @@ async fn ensure_effect(
             ensure_restart(manager).await?;
         }
         Effect::ClashConfig => {
-            manager.update_config_in_patch(update).await?;
+            manager
+                .update_config_in_patch(
+                    update,
+                    #[cfg(windows)]
+                    None,
+                )
+                .await?;
+        }
+        #[cfg(windows)]
+        Effect::RuleDirectApps => {
+            manager
+                .update_config_in_patch(update, patch.rule_direct_apps.as_deref())
+                .await?;
         }
         Effect::Autostart => autostart::update_launch().await?,
         Effect::Language => {
@@ -129,7 +141,17 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
         Patch::Verge { patch, .. } => verge.edit_draft(|draft| draft.patch_config(patch)),
         Patch::Clash(patch) => clash.edit_draft(|draft| draft.patch_config(patch)),
     }
+    // An active application bypass must have a saved list the user can edit.
+    #[cfg(windows)]
+    let save_apps_first = matches!(patch, Patch::Verge { persist: true, .. })
+        && effects.len() == 1
+        && effects.contains(&Effect::RuleDirectApps);
+    #[cfg(not(windows))]
+    let save_apps_first = false;
     let result: Result<()> = async {
+        if save_apps_first {
+            verge.latest_arc().save_file().await?;
+        }
         for effect in effects.iter().copied() {
             let result = Box::pin(ensure_effect(effect, verge_patch, manager, &update)).await;
             if matches!(patch, Patch::Clash(_)) && matches!(effect, Effect::TrayMenu | Effect::TrayIcon) {
@@ -140,16 +162,23 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
             }
         }
         match patch {
-            Patch::Verge { persist: true, .. } => verge.latest_arc().save_file().await?,
-            Patch::Verge { persist: false, .. } => {}
+            Patch::Verge { persist: true, .. } if !save_apps_first => verge.latest_arc().save_file().await?,
+            Patch::Verge { .. } => {}
             Patch::Clash(_) => clash.latest_arc().save_config().await?,
         }
         Ok(())
     }
     .await;
     if let Err(error) = result {
+        let runtime_changed = !Arc::ptr_eq(&original_runtime, &runtime.data_arc());
+        if save_apps_first && runtime_changed {
+            transaction.commit();
+            announce(Refresh::Clash);
+            announce(Refresh::Verge);
+            return Err(error);
+        }
         transaction.rollback();
-        if !Arc::ptr_eq(&original_runtime, &runtime.data_arc()) {
+        if runtime_changed {
             announce(Refresh::Clash);
             // The Core already loaded this runtime; restoring its file would only hide that state.
             let runtime_path = crate::utils::dirs::app_home_dir()?.join(crate::constants::files::RUNTIME_CONFIG);
@@ -167,6 +196,10 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
                 SilentUpdater::global().discard_pending();
             }
             if effects.contains(&Effect::ClashConfig) {
+                announce(Refresh::Clash);
+            }
+            #[cfg(windows)]
+            if effects.contains(&Effect::RuleDirectApps) {
                 announce(Refresh::Clash);
             }
             logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);

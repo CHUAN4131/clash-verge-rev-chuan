@@ -1,5 +1,15 @@
 {
   "page": {
+    "directApps": {
+      "title": "應用程式直連",
+      "add": "手動新增 EXE",
+      "description": "所選應用程式會在規則模式下直接連線。儲存後適用於新連線。",
+      "search": "搜尋應用程式",
+      "selected": "已勾選 {{count}} 項",
+      "empty": "找不到可列出的應用程式。",
+      "noResults": "找不到符合搜尋的應用程式。",
+      "loadFailed": "無法讀取應用程式清單。請重新整理或手動新增 EXE。"
+    },
     "modes": {
       "rule": "規則",
       "global": "全局",
